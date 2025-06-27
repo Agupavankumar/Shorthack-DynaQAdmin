@@ -298,29 +298,78 @@ h2 {
 .generate-btn:hover {
   background: linear-gradient(90deg, #818CF8 0%, #6366F1 100%);
 }
-.generated-code-preview {
+.code-preview-container {
   margin-top: 32px;
   width: 100%;
-  max-width: 700px;
+  max-width: 1200px;
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 2px 16px rgba(99,102,241,0.08);
-  padding: 24px 18px 18px 18px;
+  padding: 24px;
+  display: flex;
+  gap: 24px;
+  min-height: 500px;
 }
-.generated-code-label {
+
+.code-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.preview-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.generated-code-label, .preview-label {
   font-size: 1.08rem;
   font-weight: 600;
   color: #6366F1;
   margin-bottom: 10px;
 }
+
 .generated-code-block {
   background: #f7f8fa;
   border-radius: 8px;
   padding: 16px;
   font-family: 'Fira Mono', 'Consolas', monospace;
-  font-size: 1rem;
+  font-size: 0.9rem;
   color: #23272f;
   white-space: pre-wrap;
   word-break: break-all;
   margin: 0;
+  flex: 1;
+  overflow: auto;
+}
+
+.preview-frame {
+  flex: 1;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  background: white;
+}
+
+.preview-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: white;
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 1024px) {
+  .code-preview-container {
+    flex-direction: column;
+  }
+  
+  .code-section, .preview-section {
+    min-height: 300px;
+  }
+  
+  .code-preview-container {
+    max-width: 700px;
+  }
 } 

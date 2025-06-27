@@ -105,9 +105,22 @@ function Home() {
       </div>
       {error && <div style={{ color: 'red', marginTop: 12 }}>{error}</div>}
       {generatedCode && (
-        <div className="generated-code-preview">
-          <div className="generated-code-label">Generated HTML/CSS</div>
-          <pre className="generated-code-block">{generatedCode}</pre>
+        <div className="code-preview-container">
+          <div className="code-section">
+            <div className="generated-code-label">Generated HTML/CSS</div>
+            <pre className="generated-code-block">{generatedCode}</pre>
+          </div>
+                  <div className="preview-section">
+          <div className="preview-label">Live Preview</div>
+          <div className="preview-frame">
+            <iframe
+              srcDoc={generatedCode.replace(/^```html\n?/, '').replace(/\n?```$/, '')}
+              className="preview-iframe"
+              title="HTML/CSS Preview"
+              sandbox="allow-scripts"
+            />
+          </div>
+        </div>
         </div>
       )}
     </div>
