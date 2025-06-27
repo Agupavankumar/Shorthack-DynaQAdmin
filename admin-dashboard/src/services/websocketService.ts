@@ -58,27 +58,27 @@ class WebSocketService {
     this.onElementClickCallbacks.push(callback);
   }
 
-  sendElementClick(elementData: ElementData): void {
+  sendInstruction(instruction: any, publish: boolean = false): void {
     if (this.socket && this.isConnected) {
       this.socket.send(JSON.stringify({
-        type: 'element-clicked',
-        data: elementData,
+        type: 'inject-instruction',
+        data: { ...instruction, publish },
         timestamp: new Date().toISOString()
       }));
     } else {
-      console.warn('WebSocket not connected. Cannot send element data.');
+      console.warn('WebSocket not connected. Cannot send instruction.');
     }
   }
 
-  sendTransactionData(transactionData: TransactionData): void {
+  sendRevertInstruction(instructionId: string): void {
     if (this.socket && this.isConnected) {
       this.socket.send(JSON.stringify({
-        type: 'transaction-data',
-        data: transactionData,
+        type: 'revert-instruction',
+        data: { id: instructionId },
         timestamp: new Date().toISOString()
       }));
     } else {
-      console.warn('WebSocket not connected. Cannot send transaction data.');
+      console.warn('WebSocket not connected. Cannot send revert instruction.');
     }
   }
 

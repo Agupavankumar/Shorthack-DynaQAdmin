@@ -1,9 +1,8 @@
 import { Routes, Route, NavLink, Outlet } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import './DashboardLayout.css'
-import MonacoEditor from '@monaco-editor/react'
 import websocketService from './services/websocketService'
-import { generateHtmlCssFromPrompt } from './services/llmService'
+import { generateHtmlCssFromPrompt, buildSimpleInstruction } from './services/llmService'
 
 function DashboardLayout() {
   return (
@@ -50,25 +49,60 @@ function Home() {
   const [generatedCode, setGeneratedCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [selectedElement, setSelectedElement] = useState<any>(null);
+  const [instructionJson, setInstructionJson] = useState<any>(null);
+  const [sendStatus, setSendStatus] = useState('');
+  const [publish, setPublish] = useState(false);
 
   useEffect(() => {
     websocketService.connect('ws://localhost:5203');
+    websocketService.onElementClick((msg) => {
+      setSelectedElement(msg.data);
+    });
     return () => {
       websocketService.disconnect();
     };
   }, []);
 
+  useEffect(() => {
+    // Send SET_DEBUGGING message after iframe src (domain) changes
+    const timer = setTimeout(() => {
+    console.log("yes");
+    
+      const iframe = document.querySelector('.live-preview-iframe') as HTMLIFrameElement | null;
+      if (iframe && iframe.contentWindow) {
+        iframe.contentWindow.postMessage({ type: 'SET_DEBUGGING', value: !publish }, '*');
+      }
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [domain, publish]);
+
   const handleGenerate = async () => {
     setLoading(true);
     setError('');
     setGeneratedCode('');
+    setInstructionJson(null);
     try {
-      const result = await generateHtmlCssFromPrompt(prompt);
-      setGeneratedCode(result);
+      let result = '';
+      if (prompt.trim().toLowerCase() !== 'remove' && !prompt.trim().toLowerCase().startsWith('update:')) {
+        result = await generateHtmlCssFromPrompt(prompt);
+        setGeneratedCode(result);
+      }
     } catch (err) {
       setError('Failed to generate code. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSendInstruction = () => {
+    if (selectedElement) {
+      let result = generatedCode;
+      const instruction = buildSimpleInstruction(selectedElement, result, prompt);
+      websocketService.sendInstruction(instruction, publish);
+      setInstructionJson(instruction);
+      setSendStatus('Instruction sent to target domain!');
+      setTimeout(() => setSendStatus(''), 2000);
     }
   };
 
@@ -102,6 +136,14 @@ function Home() {
         <button className="generate-btn" onClick={handleGenerate} disabled={loading || !prompt}>
           {loading ? 'Generating...' : 'Generate'}
         </button>
+        <button className="generate-btn" style={{marginLeft: 12}} onClick={handleSendInstruction}>
+          Apply
+        </button>
+        <label style={{marginLeft: 16, display: 'flex', alignItems: 'center', gap: 4, fontSize: 14}}>
+          <input type="checkbox" checked={publish} onChange={e => setPublish(e.target.checked)} />
+          Publish
+        </label>
+        {sendStatus && <div style={{ color: 'green', marginTop: 8 }}>{sendStatus}</div>}
       </div>
       {error && <div style={{ color: 'red', marginTop: 12 }}>{error}</div>}
       {generatedCode && (
