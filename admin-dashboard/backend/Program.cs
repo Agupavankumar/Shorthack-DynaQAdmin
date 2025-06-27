@@ -1,15 +1,68 @@
 using System.Net.WebSockets;
 using System.Text;
 using System.Collections.Concurrent;
+using Amazon.DynamoDBv2;
+using Amazon.DynamoDBv2.DataModel;
+using backend.Services;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Add services to the container
+builder.Services.AddControllers();
+
+// Add AWS DynamoDB services
+builder.Services.AddSingleton<IAmazonDynamoDB>(sp =>
+{
+    // For local development, use a local DynamoDB instance
+    // In production, use AWS credentials and region from configuration
+    var config = new AmazonDynamoDBConfig
+    {
+        ServiceURL = "http://localhost:1234" // For local DynamoDB, change in production
+    };
+    return new AmazonDynamoDBClient(config);
+});
+builder.Services.AddSingleton<IDynamoDBService, DynamoDBService>();
+
+// Add Swagger
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { 
+        Title = "Admin Dashboard API", 
+        Version = "v1",
+        Description = "API for managing Instructions in DynamoDB",
+        Contact = new OpenApiContact
+        {
+            Name = "Admin Dashboard Team"
+        }
+    });
+});
+
 var app = builder.Build();
 
-app.UseWebSockets();
+// Configure the HTTP request pipeline
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Admin Dashboard API v1");
+        c.RoutePrefix = "swagger";
+        c.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.List);
+        c.DefaultModelsExpandDepth(-1); // Hide models by default
+    });
+}
 
+app.UseHttpsRedirection();
+app.UseAuthorization();
+app.MapControllers();
+
+// WebSocket handling
+app.UseWebSockets();
 var clients = new ConcurrentBag<WebSocket>();
 
-app.MapGet("/", () => "WebSocket backend running!");
+app.MapGet("/", () => "Admin Dashboard API running!");
 
 app.Use(async (context, next) =>
 {
