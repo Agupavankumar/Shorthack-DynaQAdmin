@@ -11,6 +11,16 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container
 builder.Services.AddControllers();
 
+builder.Services.AddCors(options =>
+{
+	options.AddDefaultPolicy(policy =>
+	{
+		policy.AllowAnyOrigin()
+			  .AllowAnyMethod()
+			  .AllowAnyHeader();
+	});
+});
+
 // Add AWS DynamoDB services
 builder.Services.AddSingleton<IAmazonDynamoDB>(sp =>
 {
@@ -53,6 +63,7 @@ if (app.Environment.IsDevelopment())
         c.DefaultModelsExpandDepth(-1); // Hide models by default
     });
 }
+app.UseCors();
 
 app.UseHttpsRedirection();
 app.UseAuthorization();
