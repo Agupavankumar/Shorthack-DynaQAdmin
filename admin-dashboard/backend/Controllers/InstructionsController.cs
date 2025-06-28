@@ -11,9 +11,9 @@ namespace backend.Controllers
         private readonly IDynamoDBService _dynamoDBService;
         private readonly ILogger<InstructionsController> _logger;
 
-        public InstructionsController(IDynamoDBService dynamoDBService, ILogger<InstructionsController> logger)
+        public InstructionsController( ILogger<InstructionsController> logger)
         {
-            _dynamoDBService = dynamoDBService;
+            //_dynamoDBService = dynamoDBService;
             _logger = logger;
         }
 
@@ -22,8 +22,30 @@ namespace backend.Controllers
         {
             try
             {
-                var instructions = await _dynamoDBService.GetAllInstructionsAsync();
-                return Ok(instructions);
+                var instructions =  new List<Instruction>
+			{
+				new Instruction
+				{
+					Id = "dynaq-1751097093207",
+					Type = "inject-instruction",
+					Action = "removeElement",
+					Publish = true,
+					Selector = "div#root > div > main > div > div",
+					Content = "",
+					Timestamp = DateTime.UtcNow.AddDays(-5).ToString("o")
+				},
+				new Instruction
+				{
+					Id = "dynaq-1751097186964",
+					Type = "inject-instruction",
+					Action = "replaceHTML",
+					Publish = true,
+					Selector = "div#root > div > main > div > form > div:nth-of-type(7) > label",
+					Content = "what location?",
+					Timestamp = DateTime.UtcNow.AddDays(-3).ToString("o")
+				},
+			};
+				return Ok(instructions);
             }
             catch (Exception ex)
             {
