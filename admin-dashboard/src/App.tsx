@@ -73,12 +73,49 @@ function Home() {
     }
   };
 
-  const handleSendInstruction = () => {
+  const handleSendInstruction = async (shouldPublish = false) => {
     if (selectedElement) {
       let result = generatedCode;
       const instruction = buildSimpleInstruction(selectedElement, result, prompt);
-      websocketService.sendInstruction(instruction, publish);
+      websocketService.sendInstruction(instruction, shouldPublish);
+      if(shouldPublish){
+        const apiPayload = {
+          ...instruction,
+          "type": "inject-instruction",
+          "publish": shouldPublish,
+          "timestamp": new Date().toISOString()
+        };
+        
+        try {
+          const response = await fetch('http://localhost:5203/api/Instructions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(apiPayload)
+          });
+         
+          if (response.ok) {
+            const currentDomain = domain;
+       
+   
+        setDomain('about:blank');
+   
+        setTimeout(() => {
+          setDomain(currentDomain);
+        }, 100);
+          }
+          else{
+            throw new Error(`API request failed with status ${response.status}`);
+          }
+         
+         
+        } catch (error) {
+          console.error('Failed to send instruction via API:', error);
+        }
+      }
       setInstructionJson(instruction);
+      setPublish(shouldPublish);
       setSendStatus('Instruction sent to target domain!');
       setTimeout(() => setSendStatus(''), 2000);
     }
@@ -113,16 +150,17 @@ function Home() {
   placeholder="Describe what you want to add (e.g., Add a blue button below the header)"
 />
           <div className="prompt-actions">
+            <div className="prompt-actions-left">
             <button className="generate-btn" onClick={handleGenerate} disabled={loading || !prompt}>
               {loading ? 'Generating...' : 'Generate'}
             </button>
-            <button className="generate-btn" onClick={handleSendInstruction}>
+            <button className="generate-btn" onClick={() => handleSendInstruction()}>
               Apply
             </button>
-            <label className="publish-label">
-              <input type="checkbox" className="publish-checkbox" checked={publish} onChange={e => setPublish(e.target.checked)} />
+            </div>
+            <button className="generate-btn" onClick={() => handleSendInstruction(true)} >
               Publish
-            </label>
+            </button>
           </div>
           {sendStatus && <div style={{ color: 'green', marginTop: 8 }}>{sendStatus}</div>}
           {error && <div style={{ color: 'red', marginTop: 12 }}>{error}</div>}
