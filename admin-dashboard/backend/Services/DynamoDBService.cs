@@ -12,6 +12,7 @@ namespace backend.Services
         Task<bool> CreateInstructionAsync(Instruction instruction);
         Task<bool> UpdateInstructionAsync(Instruction instruction);
         Task<bool> DeleteInstructionAsync(string id);
+        Task<bool> DeleteAllInstructionsAsync();
     }
 
     public class DynamoDBService : IDynamoDBService
@@ -127,6 +128,28 @@ namespace backend.Services
             }
             catch
             {
+                return false;
+            }
+        }
+
+        public async Task<bool> DeleteAllInstructionsAsync()
+        {
+            try
+            {
+                // Get all instructions
+                var instructions = await GetAllInstructionsAsync();
+                
+                // Delete each instruction
+                foreach (var instruction in instructions)
+                {
+                    await _dynamoDBContext.DeleteAsync<Instruction>(instruction.Id);
+                }
+                
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error deleting all instructions: {ex.Message}");
                 return false;
             }
         }

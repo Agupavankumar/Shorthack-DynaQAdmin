@@ -160,5 +160,24 @@ namespace backend.Controllers
                 return StatusCode(500, $"Internal server error occurred while deleting instruction {id}");
             }
         }
+
+        [HttpDelete("all")]
+        public async Task<IActionResult> DeleteAllInstructions()
+        {
+            try
+            {
+                var success = await _dynamoDBService.DeleteAllInstructionsAsync();
+                if (success)
+                {
+                    return NoContent();
+                }
+                return BadRequest("Could not delete all instructions");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting all instructions");
+                return StatusCode(500, "Internal server error occurred while deleting all instructions");
+            }
+        }
     }
 }
